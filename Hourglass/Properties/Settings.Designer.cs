@@ -137,5 +137,17 @@ namespace Hourglass.Properties {
                 this["Prefer24HourTime"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string TimerLogDbFilePath {
+            get {
+                return ((string)(this["TimerLogDbFilePath"]));
+            }
+            set {
+                this["TimerLogDbFilePath"] = value;
+            }
+        }
     }
 }

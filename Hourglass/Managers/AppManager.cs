@@ -33,7 +33,8 @@ namespace Hourglass.Managers
             SoundManager.Instance,
             TimerStartManager.Instance,
             TimerOptionsManager.Instance,
-            TimerManager.Instance
+            TimerManager.Instance,
+            TimerLogManager.Instance
         };
 
         /// <summary>

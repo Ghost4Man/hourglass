@@ -179,6 +179,13 @@ namespace Hourglass.Windows
         /// </summary>
         private WindowState restoreWindowState = WindowState.Normal;
 
+        /// <summary>
+        /// The last time the timer was renamed. Used for debouncing when logging renames.
+        /// </summary>
+        private DateTime? lastRenameTime;
+
+        private TimeSpan titleChangedDebounceTime = TimeSpan.FromSeconds(5);
+
         #endregion
 
         #region Constructors
@@ -452,6 +459,8 @@ namespace Hourglass.Windows
 
             // Show the window
             this.Show(newTimer);
+
+            AfterTimerStarted();
         }
 
         /// <summary>
@@ -1428,7 +1437,15 @@ namespace Hourglass.Windows
         /// <param name="e">The event data.</param>
         private void TimerStarted(object sender, EventArgs e)
         {
-            // Do nothing
+            // Note: this event handler is actually only called when REstarting,
+            // because the handler is registered after the Timer is already started
+
+            AfterTimerStarted();
+        }
+
+        void AfterTimerStarted()
+        {
+            TimerLogManager.Instance.OnTimerStarted(Timer.Options.Title);
         }
 
         /// <summary>
@@ -1438,7 +1455,7 @@ namespace Hourglass.Windows
         /// <param name="e">The event data.</param>
         private void TimerPaused(object sender, EventArgs e)
         {
-            // Do nothing
+            TimerLogManager.Instance.OnTimerStopped(Timer.Options.Title);
         }
 
         /// <summary>
@@ -1448,7 +1465,7 @@ namespace Hourglass.Windows
         /// <param name="e">The event data.</param>
         private void TimerResumed(object sender, EventArgs e)
         {
-            // Do nothing
+            TimerLogManager.Instance.OnTimerStarted(Timer.Options.Title);
         }
 
         /// <summary>
@@ -1458,7 +1475,7 @@ namespace Hourglass.Windows
         /// <param name="e">The event data.</param>
         private void TimerStopped(object sender, EventArgs e)
         {
-            // Do nothing
+            TimerLogManager.Instance.OnTimerStopped(Timer.Options.Title);
         }
 
         /// <summary>
@@ -1468,6 +1485,7 @@ namespace Hourglass.Windows
         /// <param name="e">The event data.</param>
         private void TimerExpired(object sender, EventArgs e)
         {
+            TimerLogManager.Instance.OnTimerStopped(Timer.Options.Title, expired: true);
             this.BeginExpirationAnimationAndSound();
         }
 
@@ -1478,7 +1496,16 @@ namespace Hourglass.Windows
         /// <param name="e">The event data.</param>
         private void TimerTick(object sender, EventArgs e)
         {
-            // Do nothing
+            // If some time elapsed since last change of timer Title, commit the rename event.
+            // Only consider renames of a running timer
+            if (Timer.State == TimerState.Running
+                && (DateTime.Now - this.lastRenameTime) > titleChangedDebounceTime)
+            {
+                // when the timer is renamed, just restart it with the new title
+                TimerLogManager.Instance.OnTimerStopped(label: null);
+                TimerLogManager.Instance.OnTimerStarted(Timer.Options.Title);
+                lastRenameTime = null;
+            }
         }
 
         /// <summary>
@@ -1498,11 +1525,19 @@ namespace Hourglass.Windows
         /// <param name="e">The event data.</param>
         private void TimerOptionsPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (e.PropertyName == "Theme")
+            if (e.PropertyName == nameof(TimerOptions.Theme))
             {
                 this.theme.PropertyChanged -= this.ThemePropertyChanged;
                 this.theme = this.Options.Theme;
                 this.theme.PropertyChanged += this.ThemePropertyChanged;
+            }
+            else if (e.PropertyName == nameof(TimerOptions.Title))
+            {
+                // Only consider renames of a running timer
+                if (Timer.State == TimerState.Running)
+                {
+                    this.lastRenameTime = DateTime.Now;
+                }
             }
 
             this.UpdateBoundControls();
