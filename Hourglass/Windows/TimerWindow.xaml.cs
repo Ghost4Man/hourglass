@@ -1455,7 +1455,7 @@ namespace Hourglass.Windows
         /// <param name="e">The event data.</param>
         private void TimerPaused(object sender, EventArgs e)
         {
-            TimerLogManager.Instance.OnTimerStopped(Timer.Options.Title);
+            TimerLogManager.Instance.OnTimerStopped(Timer.Options.Title, TimerStopReason.Paused);
         }
 
         /// <summary>
@@ -1475,7 +1475,7 @@ namespace Hourglass.Windows
         /// <param name="e">The event data.</param>
         private void TimerStopped(object sender, EventArgs e)
         {
-            TimerLogManager.Instance.OnTimerStopped(Timer.Options.Title);
+            TimerLogManager.Instance.OnTimerStopped(Timer.Options.Title, TimerStopReason.Stopped);
         }
 
         /// <summary>
@@ -1485,7 +1485,7 @@ namespace Hourglass.Windows
         /// <param name="e">The event data.</param>
         private void TimerExpired(object sender, EventArgs e)
         {
-            TimerLogManager.Instance.OnTimerStopped(Timer.Options.Title, expired: true);
+            TimerLogManager.Instance.OnTimerStopped(Timer.Options.Title, TimerStopReason.Expired);
             this.BeginExpirationAnimationAndSound();
         }
 
@@ -1502,7 +1502,7 @@ namespace Hourglass.Windows
                 && (DateTime.Now - this.lastRenameTime) > titleChangedDebounceTime)
             {
                 // when the timer is renamed, just restart it with the new title
-                TimerLogManager.Instance.OnTimerStopped(label: null);
+                TimerLogManager.Instance.OnTimerStopped(label: null, TimerStopReason.Renamed);
                 TimerLogManager.Instance.OnTimerStarted(Timer.Options.Title);
                 lastRenameTime = null;
             }

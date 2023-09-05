@@ -41,9 +41,9 @@ namespace Hourglass.Managers
             {
                 command.CommandText = @"
                     CREATE TABLE IF NOT EXISTS RawTimerLog (
-                        StartTime TEXT,
+                        StartTime TEXT NOT NULL,
                         EndTime TEXT,
-                        Expired INTEGER,
+                        StopReason TEXT,
                         Label TEXT
                     ) STRICT;
                 ";
@@ -56,7 +56,7 @@ namespace Hourglass.Managers
             if (connectionString == null)
                 return;
 
-            OnTimerStopped(label: null);
+            OnTimerStopped(label: null, TimerStopReason.AutoClosed);
 
             using (SQLiteConnection connection = new SQLiteConnection(connectionString).OpenAndReturn())
             using (SQLiteCommand command = connection.CreateCommand())
@@ -72,7 +72,7 @@ namespace Hourglass.Managers
             }
         }
 
-        public void OnTimerStopped(string label, bool expired = false)
+        public void OnTimerStopped(string label, TimerStopReason stopReason)
         {
             if (connectionString == null)
                 return;
@@ -82,11 +82,11 @@ namespace Hourglass.Managers
             {
                 command.CommandText = $@"
                     UPDATE RawTimerLog
-                    SET EndTime = @EndTime, Expired = @Expired
+                    SET EndTime = @EndTime, StopReason = @StopReason
                     WHERE EndTime IS NULL {(label != null ? "AND Label = @Label" : "")}
                 ";
                 command.Parameters.AddWithValue("@EndTime", DateTime.Now);
-                command.Parameters.AddWithValue("@Expired", expired);
+                command.Parameters.AddWithValue("@StopReason", stopReason.ToString());
                 command.Parameters.AddWithValue("@Label", label);
 
                 command.ExecuteNonQuery();
@@ -94,4 +94,22 @@ namespace Hourglass.Managers
         }
     }
 
+}
+
+namespace Hourglass
+{
+    public enum TimerStopReason
+    {
+        Unknown = 0,
+        Stopped,
+        Paused,
+        Expired,
+        Renamed,
+
+        /// <summary>
+        /// Occurs when a timer log event is automatically ended when starting
+        /// a new timer (e.g. because it was left running due to an error).
+        /// </summary>
+        AutoClosed,
+    }
 }
