@@ -1646,6 +1646,7 @@ namespace Hourglass.Windows
                 return;
             }
 
+            this.Timer.Stop();
             this.Timer = new Timer(this.Options);
             TimerManager.Instance.Add(this.Timer);
 
