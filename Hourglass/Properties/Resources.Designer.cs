@@ -566,6 +566,15 @@ namespace Hourglass.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to _Timeline.
+        /// </summary>
+        public static string ContextMenuTimelineMenuItem {
+            get {
+                return ResourceManager.GetString("ContextMenuTimelineMenuItem", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ti_mer title · Time elapsed.
         /// </summary>
         public static string ContextMenuTimerTitlePlusTimeElapsedWindowTitleMenuItem {

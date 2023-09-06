@@ -242,6 +242,11 @@ namespace Hourglass.Windows
         private MenuItem aboutMenuItem;
 
         /// <summary>
+        /// The "Timeline" <see cref="MenuItem"/>.
+        /// </summary>
+        private MenuItem timelineMenuItem;
+
+        /// <summary>
         /// The "Restore" <see cref="MenuItem"/>.
         /// </summary>
         private MenuItem restoreMenuItem;
@@ -840,6 +845,14 @@ namespace Hourglass.Windows
             this.aboutMenuItem.Header = Properties.Resources.ContextMenuAboutMenuItem;
             this.aboutMenuItem.Click += this.AboutMenuItemClick;
             this.Items.Add(this.aboutMenuItem);
+
+            this.Items.Add(new Separator());
+
+            // Timeline
+            this.timelineMenuItem = new MenuItem();
+            this.timelineMenuItem.Header = Properties.Resources.ContextMenuTimelineMenuItem;
+            this.timelineMenuItem.Click += this.TimelineMenuItemClick;
+            this.Items.Add(this.timelineMenuItem);
 
             this.Items.Add(new Separator());
 
@@ -1486,6 +1499,16 @@ namespace Hourglass.Windows
         private void AboutMenuItemClick(object sender, RoutedEventArgs e)
         {
             AboutDialog.ShowOrActivate();
+        }
+
+        /// <summary>
+        /// Invoked when the "Timeline" <see cref="MenuItem"/> is clicked.
+        /// </summary>
+        /// <param name="sender">The <see cref="MenuItem"/> where the event handler is attached.</param>
+        /// <param name="e">The event data.</param>
+        private void TimelineMenuItemClick(object sender, RoutedEventArgs e)
+        {
+            TimelineWindow.ShowOrActivate();
         }
 
         /// <summary>

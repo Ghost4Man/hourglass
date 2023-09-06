@@ -181,6 +181,9 @@
     <Compile Include="Windows\ThemeManagerWindow.xaml.cs">
       <DependentUpon>ThemeManagerWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Windows\TimelineWindow.xaml.cs">
+      <DependentUpon>TimelineWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Windows\TimerWindow.xaml.cs">
       <DependentUpon>TimerWindow.xaml</DependentUpon>
     </Compile>
@@ -203,6 +206,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Windows\ThemeManagerWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Windows\TimelineWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -258,6 +265,9 @@
     <None Include="Resources\Usage.txt" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2">
+      <Version>1.0.1938.49</Version>
+    </PackageReference>
     <PackageReference Include="System.Data.SQLite">
       <Version>1.0.118</Version>
     </PackageReference>

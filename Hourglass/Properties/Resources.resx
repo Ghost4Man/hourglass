@@ -1296,4 +1296,8 @@ $</value>
     <value>About Hourglass</value>
     <comment>The text for the hyperlink that launches the about dialog from the usage dialog</comment>
   </data>
+  <data name="ContextMenuTimelineMenuItem" xml:space="preserve">
+    <value>_Timeline</value>
+    <comment>The text for the timeline menu item, where the character following the optional underscore (_) is the access key</comment>
+  </data>
 </root>
