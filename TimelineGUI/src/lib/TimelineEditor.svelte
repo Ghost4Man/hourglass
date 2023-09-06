@@ -12,12 +12,14 @@
   let gantt: SvelteGanttComponent;
   let selectedTasks: SvelteTask[];
 
+  const READONLY_RAWDATA_ROW_ID = 0;
+
   $: {
     const endTimeFallback =
       (date.isSame(moment(), 'day')) ? moment() : date.clone().endOf('day');
     let ganttTasks: TaskModel[] = tasks.map((d, i) => ({
       id: i,
-      resourceId: 0,
+      resourceId: READONLY_RAWDATA_ROW_ID,
       from: moment(d.StartTime),
       to: moment(d.EndTime ?? endTimeFallback),
       label: d.Label,
@@ -29,6 +31,10 @@
     });
   }
 
+  function isEditable(task: TaskModel) {
+    return task.resourceId !== READONLY_RAWDATA_ROW_ID;
+  }
+
   onMount(() => {
     gantt = new SvelteGantt({
       target: document.getElementById('gantt-view'), 
@@ -37,7 +43,7 @@
         rowHeight: 100,
         rows: [
           {
-            id: 0,
+            id: READONLY_RAWDATA_ROW_ID,
             label: "raw data",
             height: 100,
             classes: ["row-disabled"],
@@ -97,7 +103,12 @@
 
 {#each (selectedTasks ?? []) as {model: task}}
   <aside class="card">
-    <h3>{task.label}</h3>
+    {#if isEditable(task)}
+      <h3 contenteditable bind:textContent={task.label}
+        on:input={() => gantt.updateTask(task)}></h3>
+    {:else}
+      <h3>{task.label}</h3>
+    {/if}
     from: {moment(task.from).format("YYYY-MM-DD HH:mm:ss")}<br>
     to: {moment(task.to).format("YYYY-MM-DD HH:mm:ss")}<br>
     duration: {moment.duration(moment(task.from).diff(task.to)).humanize()}
@@ -168,5 +179,9 @@
     cursor: grabbing;
     padding: 0.3em;
   }
+
+  [contenteditable]:hover:not(:focus-within) {
+    outline: 1px solid #888a;
+  } 
 </style>
 

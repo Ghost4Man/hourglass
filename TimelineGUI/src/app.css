@@ -70,6 +70,10 @@ details > summary:hover {
   background: #8881;
 }
 
+[contenteditable] {
+  cursor: text;
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
