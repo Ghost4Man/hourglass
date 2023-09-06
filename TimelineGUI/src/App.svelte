@@ -7,7 +7,7 @@
     dayData = ev.data;
     //console.log("dayData: ", dayData);
   });
-  let selectedDate = moment();
+  let selectedDate = moment().startOf('day');
   $: {
     const msg = selectedDate.format("YYYY-MM-DD");
     console.log("sending:", msg);
@@ -16,9 +16,10 @@
 </script>
 
 <main>
-  <button on:click={() => selectedDate = selectedDate.subtract(1, 'days')}>Previous day</button>
-  <button on:click={() => selectedDate = selectedDate.add(1, 'days')}>Next day</button>
-  <TimelineEditor date={selectedDate} tasks={dayData} />
+  <button on:click={() => selectedDate = selectedDate.clone().subtract(1, 'days')}>Previous day</button>
+  <button on:click={() => selectedDate = selectedDate.clone().add(1, 'days')}>Next day</button>
+
+  <TimelineEditor date={selectedDate.clone()} tasks={dayData} />
 </main>
 
 <style>

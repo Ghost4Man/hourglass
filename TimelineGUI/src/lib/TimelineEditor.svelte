@@ -13,7 +13,7 @@
 
   $: {
     const endTimeFallback =
-      (date.isSame(moment(), 'day')) ? moment() : date.endOf('day');
+      (date.isSame(moment(), 'day')) ? moment() : date.clone().endOf('day');
     let ganttTasks: TaskModel[] = tasks.map((d, i) => ({
       id: i,
       resourceId: 0,
@@ -23,8 +23,8 @@
     }));
     gantt?.$set({
       tasks: ganttTasks,
-      from: date.startOf('day').valueOf(),
-      to: date.endOf('day').valueOf(),
+      from: date.clone().startOf('day').valueOf(),
+      to: date.clone().endOf('day').valueOf(),
     });
   }
 
