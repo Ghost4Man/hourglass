@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Data.SQLite;
+using Dapper;
 using Hourglass.Properties;
 
 namespace Hourglass.Managers
@@ -92,12 +94,34 @@ namespace Hourglass.Managers
                 command.ExecuteNonQuery();
             }
         }
+
+        public async Task<IEnumerable<TimerLogEntry>> GetRawTimerLogForDay(DateTime day)
+        {
+            if (connectionString == null)
+                return null;
+
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString).OpenAndReturn())
+            {
+                return await connection.QueryAsync<TimerLogEntry>(
+                    "SELECT * FROM RawTimerLog " +
+                    "WHERE StartTime LIKE @DateLike OR EndTime LIKE @DateLike",
+                    new { DateLike = $"{day:yyyy'-'MM'-'dd} %" });
+            }
+        }
     }
 
 }
 
 namespace Hourglass
 {
+    public class TimerLogEntry
+    {
+        public DateTime StartTime { get; set; }
+        public DateTime? EndTime { get; set; }
+        public TimerStopReason StopReason { get; set; }
+        public string Label { get; set; }
+    }
+
     public enum TimerStopReason
     {
         Unknown = 0,
