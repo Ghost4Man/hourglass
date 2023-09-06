@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -11,6 +13,8 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+
+using Hourglass.Managers;
 
 namespace Hourglass.Windows
 {
@@ -24,6 +28,28 @@ namespace Hourglass.Windows
         public TimelineWindow()
         {
             InitializeComponent();
+            InitializeWebViewAsync();
+        }
+
+        private async void InitializeWebViewAsync()
+        {
+            await webView.EnsureCoreWebView2Async();
+            webView.WebMessageReceived += WebView_WebMessageReceived;
+        }
+
+        private async void WebView_WebMessageReceived(object sender, Microsoft.Web.WebView2.Core.CoreWebView2WebMessageReceivedEventArgs e)
+        {
+            var jsonOptions = new JsonSerializerOptions() {
+                Converters = {
+                    new JsonStringEnumConverter(),
+                }
+            };
+
+            DateTime date = DateTime.TryParseExact(
+                e.TryGetWebMessageAsString(), "yyyy'-'MM'-'dd", null, default, out date)
+                ? date : DateTime.Today;
+            var dayData = (await TimerLogManager.Instance.GetRawTimerLogForDay(date)).ToList();
+            webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(dayData, jsonOptions));
         }
 
         /// <summary>
