@@ -7,6 +7,7 @@
 
   export let tasks: any[];
   export let date: moment.Moment;
+  export let view = { startHour: 0, endHour: 24 };
 
   let gantt: SvelteGanttComponent;
   let selectedTasks: SvelteTask[];
@@ -23,8 +24,8 @@
     }));
     gantt?.$set({
       tasks: ganttTasks,
-      from: date.clone().startOf('day').valueOf(),
-      to: date.clone().endOf('day').valueOf(),
+      from: date.clone().set('hour', view.startHour).valueOf(),
+      to: date.clone().set('hour', view.endHour).valueOf(),
     });
   }
 
@@ -104,6 +105,12 @@
   #gantt-view :global(.sg-task-content):hover {
     overflow: visible;
     width: auto;
+  }
+  #gantt-view :global(.column-header-cell) {
+    border-color: #9997;
+  }
+  #gantt-view :global(.column-header-cell):hover {
+    background-color: #9992;
   }
 </style>
 
