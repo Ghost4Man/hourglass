@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.Build.NoTargets/3.7.0">
+  
+  <PropertyGroup>
+    <!-- Required to be able to load this project file inside Visual Studio: -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Npm>pnpm</Npm>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="**/*" Exclude="node_modules/**/*;bin/**/*;obj/**/*;dist/**/*;*.*proj" />
+  </ItemGroup>
+
+  <!--
+    Inspired by https://www.meziantou.net/running-npm-tasks-when-building-a-dotnet-project.htm
+  
+    1. Install npm packages
+    "Inputs" and "Outputs" are used for incremental builds. If all output items are up-to-date, MSBuild skips the target.
+    The first time the task is executed. Then, it only runs when you change the package.json file.
+    Documentation: https://learn.microsoft.com/en-us/visualstudio/msbuild/incremental-builds
+   -->
+  <Target Name="NpmInstall" Inputs="package.json" Outputs="node_modules/.install-stamp">
+    <Exec Command="$(Npm) install" />
+
+    <!-- Write the stamp file, so incremental builds work -->
+    <Touch Files="node_modules/.install-stamp" AlwaysCreate="true" />
+  </Target>
+
+  <!--
+    2. Run npm build 
+    MSBuild runs NpmInstall before this task because of the DependsOnTargets attribute.
+   -->
+  <Target Name="NpmBuild" AfterTargets="Build" DependsOnTargets="NpmInstall">
+    <Exec Command="$(Npm) run build" />
+  </Target>
+</Project>

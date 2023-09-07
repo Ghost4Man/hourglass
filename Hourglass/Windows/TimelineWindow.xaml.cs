@@ -16,6 +16,8 @@ using System.Windows.Shapes;
 
 using Hourglass.Managers;
 
+using Microsoft.Web.WebView2.Core;
+
 namespace Hourglass.Windows
 {
     /// <summary>
@@ -35,9 +37,13 @@ namespace Hourglass.Windows
         {
             await webView.EnsureCoreWebView2Async();
             webView.WebMessageReceived += WebView_WebMessageReceived;
+
+            webView.CoreWebView2.SetVirtualHostNameToFolderMapping("www.webview", "wwwroot",
+                CoreWebView2HostResourceAccessKind.Deny);
+            webView.CoreWebView2.Navigate("https://www.webview/index.html");
         }
 
-        private async void WebView_WebMessageReceived(object sender, Microsoft.Web.WebView2.Core.CoreWebView2WebMessageReceivedEventArgs e)
+        private async void WebView_WebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
         {
             var jsonOptions = new JsonSerializerOptions() {
                 Converters = {
