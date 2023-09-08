@@ -23,6 +23,7 @@
       from: moment(d.StartTime),
       to: moment(d.EndTime ?? endTimeFallback),
       label: d.Label,
+      html: `<span>${d.Label}</span>`,
     }));
     gantt?.$set({
       tasks: ganttTasks,
@@ -66,8 +67,8 @@
         },
       }
     });
-    gantt.api.tasks.on.select(tasks => { selectedTasks = tasks; });
-    gantt.api.tasks.on.changed(_ => { selectedTasks = selectedTasks; });
+    gantt.api['tasks'].on.select(tasks => { selectedTasks = tasks; });
+    gantt.api['tasks'].on.changed(_ => { selectedTasks = selectedTasks; });
 
     new SvelteGanttExternal(document.getElementById('new-task-button'), {
       gantt,
@@ -103,11 +104,12 @@
 
 {#each (selectedTasks ?? []) as {model: task}}
   <aside class="card">
+    <span class="selected-task-heading-label">Selected task:</span>
     {#if isEditable(task)}
-      <h3 contenteditable bind:textContent={task.label}
+      <h3 class="selected-task" contenteditable bind:textContent={task.label}
         on:input={() => gantt.updateTask(task)}></h3>
     {:else}
-      <h3>{task.label}</h3>
+      <h3 class="selected-task">{task.label}</h3>
     {/if}
     from: {moment(task.from).format("YYYY-MM-DD HH:mm:ss")}<br>
     to: {moment(task.to).format("YYYY-MM-DD HH:mm:ss")}<br>
@@ -122,6 +124,14 @@
 
 <style>
   pre { font-size: 0.7em; }
+
+  .selected-task-heading-label {
+    text-transform: uppercase;
+    color: #888e;
+    font-size: small;
+    display: block;
+    line-height: 1;
+  }
 
   #gantt-view :global(.row-disabled) {
     background: repeating-linear-gradient(45deg, #8883, #8883 10px, transparent 10px, transparent 20px);
@@ -139,6 +149,7 @@
   }
   #gantt-view :global(.sg-task):hover {
     background-color: #3da4fe99;
+    z-index: 10;
   }
   #gantt-view :global(.sg-task.has-unsaved-changes) {
     border: 3px dotted #fe3d60;
@@ -155,9 +166,17 @@
     font-family: Arial;
     overflow: hidden;
   }
-  #gantt-view :global(.sg-task-content):hover {
+  #gantt-view :global(.sg-task:hover .sg-task-content) {
     overflow: visible;
     width: auto;
+  }
+  #gantt-view :global(.sg-task:hover .sg-task-content > span) {
+    background: #3da4fe99;
+    box-shadow: 0 0 0 4px #3da4fe99;
+    backdrop-filter: blur(3px);
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    pointer-events: none;
   }
 
   #gantt-view :global(.column-header-cell) {
@@ -182,6 +201,6 @@
 
   [contenteditable]:hover:not(:focus-within) {
     outline: 1px solid #888a;
-  } 
+  }
 </style>
 
