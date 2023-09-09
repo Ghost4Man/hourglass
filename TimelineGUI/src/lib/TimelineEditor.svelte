@@ -4,8 +4,10 @@
   import { SvelteGantt, SvelteGanttTable, MomentSvelteGanttDateAdapter, SvelteGanttExternal } from 'svelte-gantt';
   import type { SvelteGanttComponent } from 'svelte-gantt/types/gantt';
   import type { SvelteTask, TaskModel } from 'svelte-gantt/types/core/task';
+  import type { EditedTaskModel } from './models';
 
   export let rawTasks: any[];
+  export let editedTasksById: { [id: number]: EditedTaskModel };
   export let date: moment.Moment;
   export let view = { startHour: 0, endHour: 24 };
 
@@ -14,26 +16,68 @@
 
   const READONLY_RAWDATA_ROW_ID = 0;
 
-  $: {
-    const endTimeFallback =
-      (date.isSame(moment(), 'day')) ? moment() : date.clone().endOf('day');
-    let ganttTasks: TaskModel[] = rawTasks.map((d, i) => ({
-      id: i,
-      resourceId: READONLY_RAWDATA_ROW_ID,
-      from: moment(d.StartTime),
-      to: moment(d.EndTime ?? endTimeFallback),
-      label: d.Label,
-      html: `<span>${d.Label}</span>`,
-    }));
-    gantt?.$set({
-      tasks: ganttTasks,
-      from: date.clone().set('hour', view.startHour).valueOf(),
-      to: date.clone().set('hour', view.endHour).valueOf(),
-    });
-  }
+  const endTimeFallback =
+    (date.isSame(moment(), 'day')) ? moment() : date.clone().endOf('day');
+
+  let rawTasksAsGanttTasks: TaskModel[];
+  let editedTasksAsGanttTasks: TaskModel[];
+
+  $: rawTasksAsGanttTasks = rawTasks.map((d, i) => ({
+    id: i,
+    resourceId: READONLY_RAWDATA_ROW_ID,
+    from: moment(d.startTime),
+    to: moment(d.endTime ?? endTimeFallback),
+    label: d.label,
+    html: `<span>${d.label}</span>`,
+  }));
+
+  $: editedTasksAsGanttTasks = Object.values(editedTasksById).map(t => ({
+    id: t.id,
+    resourceId: t.depth,
+    from: t.startTime,
+    to: t.endTime,
+    label: t.label,
+    html: `<span>${t.label}</span>`,
+    classes: t.hasUnsavedChanges ? ['has-unsaved-changes'] : [],
+  }));
+
+  $: gantt?.$set({
+    tasks: [...rawTasksAsGanttTasks, ...editedTasksAsGanttTasks],
+    from: date.clone().set('hour', view.startHour).valueOf(),
+    to: date.clone().set('hour', view.endHour).valueOf(),
+  });
 
   function isEditable(task: TaskModel) {
     return task.resourceId !== READONLY_RAWDATA_ROW_ID;
+  }
+
+  function addNewTask(date: moment.Moment, depth: number): EditedTaskModel {
+    const id = window.crypto.getRandomValues(new Int32Array(1))[0];
+    const newTask: EditedTaskModel = {
+      id,
+      label: `Task #${id}`,
+      startTime: date.clone(),
+      endTime: date.clone().add(30, 'minutes'),
+      depth,
+      tags: "",
+      hasUnsavedChanges: true,
+    };
+    editedTasksById[id] = newTask;
+    return newTask;
+  }
+
+  function updateTask(task: TaskModel) {
+    gantt.updateTask(task);
+
+    editedTasksById[task.id] = {
+      id: task.id,
+      startTime: moment(task.from),
+      endTime: moment(task.to),
+      label: task.label,
+      tags: "",
+      depth: task.resourceId,
+      hasUnsavedChanges: true,
+    };
   }
 
   onMount(() => {
@@ -68,22 +112,19 @@
       }
     });
     gantt.api['tasks'].on.select(tasks => { selectedTasks = tasks; });
-    gantt.api['tasks'].on.changed(_ => { selectedTasks = selectedTasks; });
+    gantt.api['tasks'].on.changed(moves => {
+      moves.forEach(({ task }) => {
+        updateTask(task.model);
+      });
+      selectedTasks = selectedTasks;
+    });
 
     new SvelteGanttExternal(document.getElementById('new-task-button'), {
       gantt,
       enabled: true,
       dragging: false,
       onsuccess: (row, date, gantt) => {
-        const id = 5000 + Math.floor(Math.random() * 99999);
-        gantt.updateTask({
-          id,
-          label: `Task #${id}`,
-          from: date,
-          to: moment(date).clone().add(30, 'minutes'),
-          classes: "has-unsaved-changes",
-          resourceId: row.model.id as number
-        });
+        addNewTask(moment(date), row.model.id as number);
       },
       // called when dragged outside main gantt area
       onfail: () => { },
@@ -107,7 +148,7 @@
     <span class="selected-task-heading-label">Selected task:</span>
     {#if isEditable(task)}
       <h3 class="selected-task" contenteditable bind:textContent={task.label}
-        on:input={() => gantt.updateTask(task)}></h3>
+        on:input={() => updateTask(task)}></h3>
     {:else}
       <h3 class="selected-task">{task.label}</h3>
     {/if}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Data;
 using System.Data.SQLite;
 using Dapper;
 using Hourglass.Properties;
@@ -47,6 +48,14 @@ namespace Hourglass.Managers
                         EndTime TEXT,
                         StopReason TEXT,
                         Label TEXT
+                    ) STRICT;
+                    CREATE TABLE IF NOT EXISTS EditedTasks (
+                        Id INTEGER PRIMARY KEY,
+                        StartTime TEXT NOT NULL,
+                        EndTime TEXT NOT NULL,
+                        Label TEXT NOT NULL,
+                        Depth INTEGER NOT NULL,
+                        Tags TEXT
                     ) STRICT;
                 ";
                 command.ExecuteNonQuery();
@@ -108,6 +117,56 @@ namespace Hourglass.Managers
                     new { DateLike = $"{day:yyyy'-'MM'-'dd} %" });
             }
         }
+
+        public async Task<IEnumerable<Task>> GetTasks(DateTime day)
+        {
+            if (connectionString == null)
+                return null;
+
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString).OpenAndReturn())
+            {
+                return await connection.QueryAsync<Task>(
+                    "SELECT * FROM EditedTasks " +
+                    "WHERE StartTime LIKE @DateLike OR EndTime LIKE @DateLike",
+                    new { DateLike = $"{day:yyyy'-'MM'-'dd} %" });
+            }
+        }
+
+        public Task GetTaskById(int taskId)
+        {
+            if (connectionString == null)
+                return null;
+
+            using (IDbConnection dbConnection = new SQLiteConnection(connectionString).OpenAndReturn())
+            {
+                string query = "SELECT * FROM EditedTasks WHERE Id = @taskId";
+                return dbConnection.QueryFirstOrDefault<Task>(query, new { taskId });
+            }
+        }
+
+        public async System.Threading.Tasks.Task UpsertTask(Task task)
+        {
+            if (task is null)
+                throw new ArgumentNullException(nameof(task));
+
+            if (connectionString == null)
+                return;
+
+            using (IDbConnection dbConnection = new SQLiteConnection(connectionString).OpenAndReturn())
+            {
+                // Insert a new task or update if it exists
+                string query = @"
+                    INSERT INTO EditedTasks (Id, StartTime, EndTime, Label, Tags, Depth)
+                        VALUES (@Id, @StartTime, @EndTime, @Label, @Tags, @Depth)
+                    ON CONFLICT DO UPDATE
+                        SET StartTime = @StartTime, EndTime = @EndTime, Label = @Label, Tags = @Tags, Depth = @Depth
+                    RETURNING Id
+                ";
+
+                int taskId = await dbConnection.QuerySingleAsync<int>(query, task);
+                task.Id = taskId;
+            }
+        }
     }
 
 }
@@ -120,6 +179,16 @@ namespace Hourglass
         public DateTime? EndTime { get; set; }
         public TimerStopReason StopReason { get; set; }
         public string Label { get; set; }
+    }
+
+    public class Task
+    {
+        public int Id { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public string Label { get; set; }
+        public int Depth { get; set; }
+        public string Tags { get; set; }
     }
 
     public enum TimerStopReason

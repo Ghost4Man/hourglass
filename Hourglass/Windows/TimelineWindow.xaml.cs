@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows;
@@ -46,16 +47,30 @@ namespace Hourglass.Windows
         private async void WebView_WebMessageReceived(object sender, CoreWebView2WebMessageReceivedEventArgs e)
         {
             var jsonOptions = new JsonSerializerOptions() {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                 Converters = {
                     new JsonStringEnumConverter(),
                 }
             };
 
-            DateTime date = DateTime.TryParseExact(
-                e.TryGetWebMessageAsString(), "yyyy'-'MM'-'dd", null, default, out date)
-                ? date : DateTime.Today;
-            var dayData = (await TimerLogManager.Instance.GetRawTimerLogForDay(date)).ToList();
-            webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(dayData, jsonOptions));
+            var message = JsonSerializer.Deserialize<JsonObject>(e.WebMessageAsJson, jsonOptions);
+            string msg = message["msg"].GetValue<string>();
+
+            if (msg == "LoadDay")
+            {
+                DateTime date = DateTime.TryParseExact(
+                    message["date"].GetValue<string>(), "yyyy'-'MM'-'dd", null, default, out date)
+                    ? date : DateTime.Today;
+                var rawTasks = (await TimerLogManager.Instance.GetRawTimerLogForDay(date)).ToList();
+                var editedTasks = (await TimerLogManager.Instance.GetTasks(date)).ToList();
+                var response = new { rawTasks, editedTasks };
+                webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(response, jsonOptions));
+            }
+            else if (msg == "UpsertTask")
+            {
+                Task task = message["task"].Deserialize<Task>(jsonOptions);
+                await TimerLogManager.Instance.UpsertTask(task);
+            }
         }
 
         /// <summary>
