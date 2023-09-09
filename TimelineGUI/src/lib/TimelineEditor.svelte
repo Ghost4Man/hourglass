@@ -5,7 +5,7 @@
   import type { SvelteGanttComponent } from 'svelte-gantt/types/gantt';
   import type { SvelteTask, TaskModel } from 'svelte-gantt/types/core/task';
 
-  export let tasks: any[];
+  export let rawTasks: any[];
   export let date: moment.Moment;
   export let view = { startHour: 0, endHour: 24 };
 
@@ -17,7 +17,7 @@
   $: {
     const endTimeFallback =
       (date.isSame(moment(), 'day')) ? moment() : date.clone().endOf('day');
-    let ganttTasks: TaskModel[] = tasks.map((d, i) => ({
+    let ganttTasks: TaskModel[] = rawTasks.map((d, i) => ({
       id: i,
       resourceId: READONLY_RAWDATA_ROW_ID,
       from: moment(d.StartTime),
@@ -119,7 +119,7 @@
 
 <details class="card">
   <summary>Debug info</summary>
-  <pre>{JSON.stringify(tasks, null, 4)}</pre>
+  <pre>{JSON.stringify(rawTasks, null, 4)}</pre>
 </details>
 
 <style>

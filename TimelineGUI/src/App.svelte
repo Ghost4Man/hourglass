@@ -2,10 +2,10 @@
   import moment from 'moment';
   import TimelineEditor from './lib/TimelineEditor.svelte'
 
-  let dayData = [];
+  let rawTasks = [];
   (window as any).chrome.webview.addEventListener("message", ev => {
-    dayData = ev.data;
-    //console.log("dayData: ", dayData);
+    rawTasks = ev.data;
+    //console.log("rawTasks: ", rawTasks);
   });
   let selectedDate = moment().startOf('day');
   let view = { startHour: 0, endHour: 24 };
@@ -29,7 +29,9 @@
   <input type="text" value="{view.startHour}-{view.endHour}"
     on:change={e => view = parseView(e.currentTarget.value)}>
 
-  <TimelineEditor date={selectedDate.clone()} tasks={dayData} view={view} />
+  <TimelineEditor date={selectedDate.clone()}
+  	{view}
+  	{rawTasks} />
 </main>
 
 <style>
