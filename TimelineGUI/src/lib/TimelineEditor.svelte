@@ -77,7 +77,13 @@
       tags: "",
       depth: task.resourceId,
       hasUnsavedChanges: true,
+      isDeleted: editedTasksById[task.id]?.isDeleted ?? false,
     };
+  }
+
+  function deleteTask(task: TaskModel) {
+    editedTasksById[task.id].isDeleted = true;
+    updateTask(task);
   }
 
   onMount(() => {
@@ -154,7 +160,11 @@
     {/if}
     from: {moment(task.from).format("YYYY-MM-DD HH:mm:ss")}<br>
     to: {moment(task.to).format("YYYY-MM-DD HH:mm:ss")}<br>
-    duration: {moment.duration(moment(task.from).diff(task.to)).humanize()}
+    duration: {moment.duration(moment(task.from).diff(task.to)).humanize()}<br>
+    actions:
+    {#if isEditable(task)}
+      <button class="task-action danger" on:click={() => { deleteTask(task); }}>Delete task</button>
+    {/if}
   </aside>
 {/each}
 
@@ -242,6 +252,14 @@
 
   [contenteditable]:hover:not(:focus-within) {
     outline: 1px solid #888a;
+  }
+
+  button.task-action {
+    padding: 0em 0.5em;
+  }
+  button.danger:hover {
+    color: red;
+    border-color: currentColor;
   }
 </style>
 

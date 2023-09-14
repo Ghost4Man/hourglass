@@ -7,6 +7,7 @@ export type EditedTaskModel = {
   depth: number,
   tags: string,
   hasUnsavedChanges?: boolean,
+  isDeleted?: boolean,
 };
 
 

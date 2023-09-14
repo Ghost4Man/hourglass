@@ -69,7 +69,14 @@ namespace Hourglass.Windows
             else if (msg == "UpsertTask")
             {
                 Task task = message["task"].Deserialize<Task>(jsonOptions);
-                await TimerLogManager.Instance.UpsertTask(task);
+                if (task.IsDeleted is true)
+                {
+                    await TimerLogManager.Instance.DeleteTask(task.Id);
+                }
+                else
+                {
+                    await TimerLogManager.Instance.UpsertTask(task);
+                }
             }
         }
 

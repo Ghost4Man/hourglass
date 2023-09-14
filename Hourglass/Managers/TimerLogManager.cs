@@ -167,6 +167,18 @@ namespace Hourglass.Managers
                 task.Id = taskId;
             }
         }
+
+        public async System.Threading.Tasks.Task DeleteTask(int id)
+        {
+            if (connectionString == null)
+                return;
+
+            using (IDbConnection dbConnection = new SQLiteConnection(connectionString).OpenAndReturn())
+            {
+                string sql = "DELETE FROM EditedTasks WHERE Id = @Id";
+                await dbConnection.ExecuteAsync(sql, new { Id = id });
+            }
+        }
     }
 
 }
@@ -189,6 +201,7 @@ namespace Hourglass
         public string Label { get; set; }
         public int Depth { get; set; }
         public string Tags { get; set; }
+        public bool? IsDeleted { get; set; }
     }
 
     public enum TimerStopReason
