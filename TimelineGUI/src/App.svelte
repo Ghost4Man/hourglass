@@ -25,9 +25,17 @@
     return { startHour, endHour };
   }
 
+  function getDirtyTasks() {
+    return Object.values(editedTasksById)
+      .filter(t => t.hasUnsavedChanges);
+  }
+
+  function reload() {
+    selectedDate = selectedDate;
+  }
+
   function saveChanges() {
-    const tasksWithUnsavedChanges =
-      Object.values(editedTasksById).filter(t => t.hasUnsavedChanges);
+    const tasksWithUnsavedChanges = getDirtyTasks();
     console.log(`saving changes to ${tasksWithUnsavedChanges.length} tasks...`);
     for (const task of tasksWithUnsavedChanges) {
       sendMessage("UpsertTask", { task });
@@ -40,6 +48,7 @@
 <main>
   <button on:click={() => selectedDate = selectedDate.clone().subtract(1, 'days')}>Previous day</button>
   <button on:click={() => selectedDate = selectedDate.clone().add(1, 'days')}>Next day</button>
+  <button on:click={() => reload()}>Refresh</button>
   <input type="text" value="{view.startHour}-{view.endHour}"
     on:change={e => view = parseView(e.currentTarget.value)}>
   <button on:click={saveChanges}>Save changes</button>
