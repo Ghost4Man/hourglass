@@ -4,6 +4,7 @@
   import { SvelteGantt, SvelteGanttTable, MomentSvelteGanttDateAdapter, SvelteGanttExternal } from 'svelte-gantt';
   import type { SvelteGanttComponent } from 'svelte-gantt/types/gantt';
   import type { SvelteTask, TaskModel } from 'svelte-gantt/types/core/task';
+  import type { TimeRangeModel } from 'svelte-gantt/types/core/timeRange';
   import type { EditedTaskModel } from './models';
 
   export let rawTasks: any[];
@@ -45,6 +46,7 @@
     tasks: [...rawTasksAsGanttTasks, ...editedTasksAsGanttTasks],
     from: date.clone().set('hour', view.startHour).valueOf(),
     to: date.clone().set('hour', view.endHour).valueOf(),
+    timeRanges: [createTimeRangeForMoment(0, moment())]
   });
 
   function isEditable(task: TaskModel) {
@@ -143,6 +145,20 @@
       }
     });
   })
+
+
+  function createTimeRangeForMoment(
+      id: number, time: moment.Moment, label?: string): TimeRangeModel {
+    console.log(`Creating moment time-range: ${time}`);
+    return {
+      id,
+      from: time,
+      to: time,
+      classes: "readonly-instant",
+      enableResizing: false,
+      label: label ?? "",
+    };
+  }
 </script>
 
 <div id="gantt-view">
@@ -235,6 +251,21 @@
   }
   #gantt-view :global(.column-header-cell):hover {
     background-color: #9992;
+  }
+
+  #gantt-view :global(.sg-time-range-control.readonly-instant :is(.sg-time-range-handle-left, .sg-time-range-handle-right)) {
+    /* make sure the handles are non-interactive (readonly) */
+    pointer-events: none;
+    user-select: none;
+  }
+
+  #gantt-view :global(.sg-time-range.readonly-instant) {
+    border-left: 2px dashed;
+  }
+
+  /* hide the time-range label if it's empty */
+  #gantt-view :global(.sg-time-range-label:empty) {
+    display: none;
   }
 
   #new-task-button {
