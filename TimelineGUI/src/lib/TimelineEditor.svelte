@@ -18,7 +18,7 @@
   const READONLY_RAWDATA_ROW_ID = 0;
 
   const endTimeFallback =
-    (date.isSame(moment(), 'day')) ? moment() : date.clone().endOf('day');
+    () => date.isSame(moment(), 'day') ? moment() : date.clone().endOf('day');
 
   let rawTasksAsGanttTasks: TaskModel[];
   let editedTasksAsGanttTasks: TaskModel[];
@@ -27,7 +27,7 @@
     id: i,
     resourceId: READONLY_RAWDATA_ROW_ID,
     from: moment(d.startTime),
-    to: moment(d.endTime ?? endTimeFallback),
+    to: moment(d.endTime ?? endTimeFallback()),
     label: d.label,
     html: `<span>${d.label}</span>`,
   }));
