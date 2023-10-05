@@ -6,7 +6,7 @@
   let rawTasks = [];
   let editedTasksById: { [id: number]: EditedTaskModel } = {};
   (window as any).chrome.webview.addEventListener("message", ev => {
-    console.log("received: ", ev.data);
+    console.debug("received: ", ev.data);
     rawTasks = ev.data.rawTasks ?? rawTasks;
 
     if (ev.data.editedTasks) {

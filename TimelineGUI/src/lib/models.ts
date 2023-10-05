@@ -16,6 +16,6 @@ export function sendMessage(msg: "UpsertTask", data: { task: EditedTaskModel });
 
 export function sendMessage(msg: string, data: any) {
   const message = { msg, ...data };
-  console.log("sending:", message);
+  console.debug("sending:", message);
   (window as any).chrome.webview.postMessage(message);
 }

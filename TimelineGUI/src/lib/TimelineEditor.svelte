@@ -149,7 +149,6 @@
 
   function createTimeRangeForMoment(
       id: number, time: moment.Moment, label?: string): TimeRangeModel {
-    console.log(`Creating moment time-range: ${time}`);
     return {
       id,
       from: time,
