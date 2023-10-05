@@ -25,6 +25,9 @@ devDependencies:
   svelte-check:
     specifier: ^3.4.6
     version: 3.4.6(svelte@4.0.5)
+  svelte-codicons:
+    specifier: ^0.11.0
+    version: 0.11.0
   tslib:
     specifier: ^2.6.0
     version: 2.6.0
@@ -902,6 +905,10 @@ packages:
       - sass
       - stylus
       - sugarss
+    dev: true
+
+  /svelte-codicons@0.11.0:
+    resolution: {integrity: sha512-cHG7Tl22uEFhwE5mYkO4nDwtFadPN8CKG3lGl8D6ZE1+4i3xXfkYt/AY0dQKx2D5KHUDvc8TDDfbjRMtGbCRJw==}
     dev: true
 
   /svelte-gantt@4.0.9-beta(moment@2.29.4):

@@ -3,9 +3,10 @@
   import TimelineEditor from './lib/TimelineEditor.svelte'
   import { sendMessage, type EditedTaskModel } from './lib/models';
   import { onMount } from 'svelte';
+  import { IconPrevious, IconNext, IconRefresh, IconSaveAll } from './lib/icons';
 
   const AUTOREFRESH_INTERVAL = 4 * 60 * 1000; // every four minutes
- 
+
   let rawTasks = [];
   let editedTasksById: { [id: number]: EditedTaskModel } = {};
   (window as any).chrome.webview.addEventListener("message", ev => {
@@ -63,12 +64,34 @@
 </script>
 
 <main>
-  <button on:click={() => selectedDate = selectedDate.clone().subtract(1, 'days')}>Previous day</button>
-  <button on:click={() => selectedDate = selectedDate.clone().add(1, 'days')}>Next day</button>
-  <button on:click={() => reload()}>Refresh</button>
-  <input type="text" value="{view.startHour}-{view.endHour}"
-    on:change={e => view = parseView(e.currentTarget.value)}>
-  <button on:click={saveChanges}>Save changes</button>
+  <header class="toolbar">
+    <button title="Refresh" on:click={() => reload()}>
+      <IconRefresh />
+    </button>
+
+    <div class="toolbar-group date-selection">
+      <button title="Previous day" class="narrow"
+          on:click={() => selectedDate = selectedDate.clone().subtract(1, 'days')}>
+        <IconPrevious />
+      </button>
+      <input type="date" name="selectedDate" value={selectedDate.format(moment.HTML5_FMT.DATE)}
+        on:input={e => { selectedDate = moment(e.target["valueAsDate"]); }}>
+      <button title="Next day" class="narrow"
+          on:click={() => selectedDate = selectedDate.clone().add(1, 'days')}>
+        <IconNext />
+      </button>
+    </div>
+
+    <div class="toolbar-group view-settings">
+      <input type="text" value="{view.startHour}-{view.endHour}" title="Hour range to display"
+        on:change={e => view = parseView(e.currentTarget.value)}>
+    </div>
+
+    <button on:click={saveChanges}>
+      <IconSaveAll />
+      Save changes
+    </button>
+  </header>
 
   <TimelineEditor date={selectedDate.clone()}
     {view}
@@ -77,4 +100,20 @@
 </main>
 
 <style>
+  .toolbar {
+    padding: 0.3em;
+    display: flex;
+    border-bottom: 1px solid #ccc5;
+    box-shadow: 0 0 20px -3px #0003;
+    gap: 1.5em;
+  }
+  .toolbar-group {
+    display: flex;
+  }
+  input[type=date] {
+    text-align: center;
+  }
+  .view-settings input {
+    width: 8ch;
+  }
 </style>
