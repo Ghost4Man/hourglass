@@ -8,6 +8,7 @@ namespace Hourglass.Windows
 {
     using System;
     using System.Globalization;
+    using System.Threading.Tasks;
     using System.Windows;
     using System.Windows.Controls;
     using System.Windows.Media;
@@ -42,8 +43,20 @@ namespace Hourglass.Windows
         /// </summary>
         public SizeToFitTextBox()
         {
+            bool sizeChangedEventEnabled = true;
+
             this.Loaded += (s, e) => this.UpdateFontSize();
-            this.SizeChanged += (s, e) => this.UpdateFontSize();
+            this.SizeChanged += async (s, e) => {
+                // just a hotfix for the freezing-when-writing-long-texts problem
+                // this is just some hacked-together throttling
+                await Task.Delay(200);
+                if (!sizeChangedEventEnabled) return;
+                sizeChangedEventEnabled = false;
+
+                this.UpdateFontSize();
+                await Task.Delay(200);
+                sizeChangedEventEnabled = true;
+            };
             this.TextChanged += (s, e) => this.UpdateFontSize();
         }
 
