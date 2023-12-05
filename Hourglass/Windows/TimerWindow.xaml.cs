@@ -7,6 +7,7 @@
 namespace Hourglass.Windows
 {
     using System;
+    using System.Collections.Generic;
     using System.ComponentModel;
     using System.Diagnostics;
     using System.Linq;
@@ -1789,7 +1790,7 @@ namespace Hourglass.Windows
         /// </summary>
         /// <param name="sender">The <see cref="TitleTextBox"/>.</param>
         /// <param name="e">The event data.</param>
-        private void TitleTextBoxKeyDown(object sender, KeyEventArgs e)
+        private async void TitleTextBoxKeyDown(object sender, KeyEventArgs e)
         {
             if (e.Key == Key.Enter && this.Mode == TimerWindowMode.Status)
             {
@@ -1804,6 +1805,31 @@ namespace Hourglass.Windows
 
                 e.Handled = true;
             }
+            else if (e.Key == Key.Space && (e.KeyboardDevice.Modifiers == ModifierKeys.Control
+                                        || e.KeyboardDevice.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift)))
+            {
+                bool caseSensitive = e.KeyboardDevice.Modifiers == ModifierKeys.Control;
+                var recentLabels = await TimerLogManager.Instance.SearchRecentTaskLabels(TitleTextBox.Text, caseSensitive);
+                CreateAutocompleteMenu(recentLabels);
+                e.Handled = true;
+            }
+        }
+
+        void CreateAutocompleteMenu(IEnumerable<string> suggestions)
+        {
+            var menu = new ContextMenu();
+            foreach (var suggestion in suggestions)
+            {
+                var menuItem = new MenuItem { Header = suggestion };
+                menuItem.Click += (s, e) => {
+                    TitleTextBox.Text = suggestion;
+                    TitleTextBox.CaretIndex = suggestion.Length;
+                };
+                menu.Items.Add(menuItem);
+            }
+            menu.PlacementTarget = TitleTextBox;
+            menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+            menu.IsOpen = true;
         }
 
         /// <summary>

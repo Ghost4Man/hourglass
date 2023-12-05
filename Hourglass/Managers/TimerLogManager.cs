@@ -132,6 +132,28 @@ namespace Hourglass.Managers
             }
         }
 
+        public async Task<IEnumerable<string>> SearchRecentTaskLabels(string searchedText, bool caseSensitive)
+        {
+            if (connectionString == null)
+                return null;
+
+            using (SQLiteConnection connection = new SQLiteConnection(connectionString).OpenAndReturn())
+            {
+                return await connection.QueryAsync<string>(
+                    "SELECT DISTINCT Label FROM (" +
+                    "   SELECT Label, EndTime FROM EditedTasks " +
+                    "   UNION " +
+                    "   SELECT Label, EndTime FROM RawTimerLog " +
+                    "   ORDER BY EndTime DESC " +
+                    ") " +
+                    (caseSensitive
+                        ? "WHERE instr(Label, @searchedText) > 0 "
+                        : "WHERE instr(lower(Label), lower(@searchedText)) > 0 ") +
+                    "LIMIT 8",
+                    new { searchedText });
+            }
+        }
+
         public Task GetTaskById(int taskId)
         {
             if (connectionString == null)
