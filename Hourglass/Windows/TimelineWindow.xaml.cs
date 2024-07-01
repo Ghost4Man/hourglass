@@ -19,6 +19,9 @@ using Hourglass.Managers;
 
 using Microsoft.Web.WebView2.Core;
 
+using NodaTime;
+using NodaTime.Text;
+
 namespace Hourglass.Windows
 {
     /// <summary>
@@ -58,11 +61,16 @@ namespace Hourglass.Windows
 
             if (msg == "LoadDay")
             {
-                DateTime date = DateTime.TryParseExact(
-                    message["date"].GetValue<string>(), "yyyy'-'MM'-'dd", null, default, out date)
-                    ? date : DateTime.Today;
-                var rawTasks = (await TimerLogManager.Instance.GetRawTimerLogForDay(date)).ToList();
-                var editedTasks = (await TimerLogManager.Instance.GetTasks(date)).ToList();
+                LocalDate date = parseDate(message["date"].GetValue<string>())
+                    ?? LocalDate.FromDateTime(DateTime.Today);
+
+                DateTimeZone zone = DateTimeZoneProviders.Bcl.GetSystemDefault();
+                ZonedDateTime from = date.AtStartOfDayInZone(zone);
+                ZonedDateTime to = date.PlusDays(1).AtStartOfDayInZone(zone)
+                    .PlusHours(3); // the UI sometimes shows a few hours of the next day
+
+                var rawTasks = (await TimerLogManager.Instance.GetTimerLogEntries(from, to)).ToList();
+                var editedTasks = (await TimerLogManager.Instance.GetTasks(from, to)).ToList();
                 var response = new { rawTasks, editedTasks };
                 webView.CoreWebView2.PostWebMessageAsJson(JsonSerializer.Serialize(response, jsonOptions));
             }
@@ -77,6 +85,13 @@ namespace Hourglass.Windows
                 {
                     await TimerLogManager.Instance.UpsertTask(task);
                 }
+            }
+
+            LocalDate? parseDate(string dateStr)
+            {
+                var pattern = LocalDatePattern.CreateWithInvariantCulture("yyyy'-'MM'-'dd");
+                var parseResult = pattern.Parse(dateStr);
+                return parseResult.Success ? parseResult.Value : (LocalDate?)null;
             }
         }
 

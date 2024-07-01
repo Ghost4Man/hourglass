@@ -7,6 +7,7 @@ using System.Data;
 using System.Data.SQLite;
 using Dapper;
 using Hourglass.Properties;
+using NodaTime;
 
 namespace Hourglass.Managers
 {
@@ -104,7 +105,7 @@ namespace Hourglass.Managers
             }
         }
 
-        public async Task<IEnumerable<TimerLogEntry>> GetRawTimerLogForDay(DateTime day)
+        public async Task<IEnumerable<TimerLogEntry>> GetTimerLogEntries(ZonedDateTime from, ZonedDateTime to)
         {
             if (connectionString == null)
                 return null;
@@ -113,12 +114,15 @@ namespace Hourglass.Managers
             {
                 return await connection.QueryAsync<TimerLogEntry>(
                     "SELECT * FROM RawTimerLog " +
-                    "WHERE StartTime LIKE @DateLike OR EndTime LIKE @DateLike",
-                    new { DateLike = $"{day:yyyy'-'MM'-'dd} %" });
+                    "WHERE EndTime > @From AND StartTime < @To",
+                    new {
+                        From = $"{from:yyyy'-'MM'-'dd HH:mm} %",
+                        To = $"{to:yyyy'-'MM'-'dd HH:mm} %"
+                    });
             }
         }
 
-        public async Task<IEnumerable<Task>> GetTasks(DateTime day)
+        public async Task<IEnumerable<Task>> GetTasks(ZonedDateTime from, ZonedDateTime to)
         {
             if (connectionString == null)
                 return null;
@@ -127,8 +131,11 @@ namespace Hourglass.Managers
             {
                 return await connection.QueryAsync<Task>(
                     "SELECT * FROM EditedTasks " +
-                    "WHERE StartTime LIKE @DateLike OR EndTime LIKE @DateLike",
-                    new { DateLike = $"{day:yyyy'-'MM'-'dd} %" });
+                    "WHERE EndTime > @From AND StartTime < @To",
+                    new {
+                        From = $"{from.WithZone(DateTimeZone.Utc):yyyy'-'MM'-'dd HH:mm} %",
+                        To = $"{to.WithZone(DateTimeZone.Utc):yyyy'-'MM'-'dd HH:mm} %"
+                    });
             }
         }
 

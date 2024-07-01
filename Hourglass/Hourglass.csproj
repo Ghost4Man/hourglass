@@ -271,6 +271,9 @@
     <PackageReference Include="Microsoft.Web.WebView2">
       <Version>1.0.1938.49</Version>
     </PackageReference>
+    <PackageReference Include="NodaTime">
+      <Version>3.1.10</Version>
+    </PackageReference>
     <PackageReference Include="System.Data.SQLite">
       <Version>1.0.118</Version>
     </PackageReference>
@@ -282,7 +285,6 @@
   <Target Name="AfterBuild" Condition=" ('$(Configuration)' == 'Signed') Or ('$(Configuration)' == 'Signed Portable') ">
     <SignFile CertificateThumbprint="B77A97E1103C36360CDC8D49CF0D3D5BBBE6827E" SigningTarget="$(TargetPath)" TimestampUrl="http://timestamp.digicert.com" TargetFrameworkVersion="$(TargetFrameworkVersion)" />
   </Target>
-  
   <Target Name="IncludeWwwFiles" AfterTargets="AfterBuild">
     <ItemGroup>
       <!-- Because this ItemGroup is inside the target, this will enumerate
@@ -291,10 +293,6 @@
         the build starts, which may miss files created during the build. -->
       <MySourceFiles Include="$(SolutionDir)TimelineGUI/dist/**/*" />
     </ItemGroup>
-
-    <Copy
-      SourceFiles="@(MySourceFiles)"
-      DestinationFolder="$(TargetDir)/wwwroot/%(RecursiveDir)" />
+    <Copy SourceFiles="@(MySourceFiles)" DestinationFolder="$(TargetDir)/wwwroot/%(RecursiveDir)" />
   </Target>
-
 </Project>
